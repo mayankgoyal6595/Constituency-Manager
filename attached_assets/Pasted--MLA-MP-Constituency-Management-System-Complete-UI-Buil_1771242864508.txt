@@ -1,0 +1,568 @@
+# 🏛️ MLA/MP Constituency Management System — Complete UI Build Prompt
+
+---
+
+## MASTER PROMPT
+
+> **Use this prompt as-is (or split into phases) to build the complete platform UI.**
+
+---
+
+```
+Build a complete, production-grade full-stack web application called the "MP/MLA Constituency Management & Monitoring Portal" — a powerful digital governance platform for a single elected representative (MP or MLA) and their office. This is NOT a multi-tenant SaaS. It is a dedicated, single-constituency platform.
+
+===========================================================
+TECH STACK
+===========================================================
+Frontend:
+- React.js (with React Router v6 for navigation)
+- Tailwind CSS (for utility-first styling)
+- Recharts or Chart.js (for all analytics charts)
+- Framer Motion or CSS transitions (for animations)
+- Lucide React or Heroicons (for icons)
+- Context API + useReducer (for global state: auth, theme, sidebar)
+
+Backend (if full-stack, otherwise mock with JSON):
+- Node.js + Express.js
+- PostgreSQL or MySQL (relational DB — schema provided below)
+- REST API (JWT-based auth)
+- Role-Based Access Control (RBAC)
+
+Design:
+- Dark/Light mode toggle (persisted in localStorage)
+- Responsive (desktop-first, mobile-ready)
+- Color palette: Deep navy (#0F172A) for dark mode, clean white (#F8FAFC) for light mode, with a primary accent of #3B82F6 (blue) and secondary #10B981 (emerald green) for success states
+- Font: "Sora" or "Plus Jakarta Sans" for headings, "DM Sans" for body text (import from Google Fonts)
+- Sidebar navigation (collapsible), top header bar with user info, notifications bell, and theme toggle
+- Glassmorphism cards on dashboard, subtle shadows, smooth hover states
+- Indian governance aesthetic: professional, trustworthy, clean — NOT playful
+
+===========================================================
+THREE USER ROLES (RBAC)
+===========================================================
+
+1. SUPER ADMIN (System Administrator)
+   - Full system control
+   - Manage all users, roles, permissions
+   - Configure wards, departments, schemes
+   - Database backup/restore controls
+   - Security configuration panel
+   - Audit logs viewer
+   - Can impersonate other roles for testing
+   - Access: Everything + system settings
+
+2. MLA / MP (The Elected Representative — only 1 account)
+   - View-only + approval dashboard (no data entry)
+   - Full overview dashboard with real-time KPIs
+   - Monitor grievances / projects / schemes / funds
+   - Filter by ward / category / department
+   - Compare department performance
+   - View delays and bottlenecks
+   - Review scheme coverage statistics
+   - View infrastructure & demographic data
+   - Download/export PDF and Excel reports
+   - Approve or reject flagged grievances
+   - Receive notifications on critical issues
+   - Access: All read + approval actions
+
+3. OFFICE STAFF / PA / DATA ENTRY
+   - Primary data entry role (no dashboard analytics)
+   - Enter offline complaints received from citizens
+   - Add/update institution records
+   - Maintain scheme lists
+   - Create and update project records
+   - Upload documents/photos
+   - Send SMS/WhatsApp notifications to citizens (button)
+   - Generate and print reports
+   - Assist MLA (add meeting notes, schedule events)
+   - Access: Data management + limited dashboard summary
+
+===========================================================
+DATABASE SCHEMA (implement or mock this structure)
+===========================================================
+
+Tables:
+1. users (id, name, email, password_hash, role [super_admin|mla|staff], avatar, phone, created_at, last_login, is_active)
+
+2. wards (ward_id PK, ward_name, population, area_type [urban|rural|semi-urban], area_name, created_at)
+
+3. projects (
+   project_id PK, project_name, category, department,
+   contractor_name, ward_id FK, start_date, end_date,
+   budget_sanctioned, budget_released, budget_used,
+   status [completed|running|pending|on_hold],
+   completion_percentage, description, created_by FK, created_at, updated_at
+)
+
+4. grievances (
+   grievance_id PK, citizen_name, citizen_phone,
+   category [road|water|electricity|sanitation|safety|education|health|other],
+   description, ward_id FK, assigned_dept,
+   priority [high|medium|low],
+   status [pending|in_progress|resolved|rejected],
+   created_date, resolved_date, resolution_note,
+   created_by FK, assigned_to FK
+)
+
+5. institutions (
+   institution_id PK, name, inst_category
+   [temple|hospital|school|college|police_station|govt_office|ngo|gym|market|slum|rwa|club|sports_ground|university|coaching_center|old_age_home|dispensary],
+   address, ward_id FK, official_contact_no, email,
+   status [active|inactive|under_maintenance|closed|proposed],
+   established_year, website, notes, created_at
+)
+
+6. incharges (
+   incharge_id PK, institution_id FK, name, designation,
+   contact_no, dob, email, address, photo_url, created_at
+)
+
+7. citizen_demographics (
+   demo_id PK, ward_id FK, community_group
+   [market|slum|sports_team|club|rwa|senior_citizens|buddhjiwis|women_group|youth_group],
+   male_count, female_count,
+   age_0_18, age_19_35, age_36_60, age_60_plus,
+   recorded_date
+)
+
+8. schemes (
+   scheme_id PK, name, department, target_beneficiaries,
+   current_beneficiaries, budget, status, ward_id FK,
+   description, start_date, end_date
+)
+
+9. activity_logs (id, user_id FK, action, module, record_id, timestamp, ip_address)
+
+10. notifications (id, user_id FK, title, message, type [info|warning|success|error], is_read, created_at)
+
+===========================================================
+APPLICATION STRUCTURE & ROUTING
+===========================================================
+
+/login                          → Login Page
+/dashboard                      → Main Overview Dashboard (MLA + Admin)
+/grievances                     → Grievance List + Filters
+/grievances/new                 → Add Grievance (Staff)
+/grievances/:id                 → Grievance Detail View
+/projects                       → Project List + Filters + Kanban/Table toggle
+/projects/new                   → Add Project (Staff)
+/projects/:id                   → Project Detail + Timeline
+/institutions                   → Institution Directory (with tabs by category)
+/institutions/new               → Add Institution (Staff)
+/institutions/:id               → Institution Detail + Incharge info
+/community                      → Community Groups & Demographics
+/schemes                        → Government Schemes Tracker
+/wards                          → Ward-wise Data View
+/reports                        → Report Generation Center
+/settings                       → Settings (theme, profile, notifications)
+/admin                          → Super Admin Panel (users, roles, config)
+/admin/users                    → User Management
+/admin/audit-logs               → Audit Logs
+
+===========================================================
+PAGE-BY-PAGE DETAILED SPECIFICATIONS
+===========================================================
+
+─────────────────────────────────────
+PAGE 1: LOGIN PAGE
+─────────────────────────────────────
+- Full-screen split layout: Left = branding panel (dark navy, constituency name, logo, tagline), Right = login form
+- Logo area: Ashoka Chakra icon + "Constituency Portal" text
+- Form: Email field, Password field, "Remember me" checkbox, Login button
+- Roles shown subtly as chips below logo (Super Admin / MLA / Staff)
+- Show/hide password toggle
+- Error state with shake animation on wrong credentials
+- Light/dark toggle in top-right corner (even before login)
+- Forgot password link
+- Footer: "Powered by Vibrantick Infotech Solutions"
+- On success: redirect based on role
+
+─────────────────────────────────────
+PAGE 2: MAIN LAYOUT (SHELL)
+─────────────────────────────────────
+SIDEBAR (left, collapsible to icon-only):
+- Top: Logo + constituency name + collapse button
+- Navigation items with icons:
+  Dashboard (home icon)
+  Grievances (message-alert icon)
+  Projects (clipboard-list icon)
+  Institutions (building icon)
+  Community (users icon)
+  Schemes (document-text icon)
+  Wards (map icon)
+  Reports (chart-bar icon)
+  Settings (cog icon)
+  Admin Panel (shield icon — Super Admin only)
+- Bottom: Logged-in user avatar, name, role badge, logout button
+- Active state: highlighted with accent color + left border indicator
+- Hover: smooth background transition
+
+TOP HEADER BAR:
+- Left: Current page title + breadcrumb
+- Right: 
+  - Search bar (global search)
+  - Notification bell with unread count badge
+  - Dark/Light mode toggle (sun/moon icon, smooth transition)
+  - User avatar with dropdown (profile, settings, logout)
+
+─────────────────────────────────────
+PAGE 3: OVERVIEW DASHBOARD (MLA/MP + Admin view)
+─────────────────────────────────────
+SECTION A — KPI STAT CARDS (row of 6):
+1. Total Grievances | Pending count badge | trend arrow
+2. Grievances Resolved This Month | percentage badge
+3. Active Projects | count | budget indicator
+4. Projects Completed | count
+5. Total Institutions Tracked | count
+6. Avg Grievance Resolution Time | in days
+
+Each card: glassmorphism style, animated count-up on load, colored icon, subtle gradient background based on category
+
+SECTION B — CHARTS ROW:
+- Chart 1 (left, 50%): Bar chart — Grievances by Category (road, water, electricity, health, etc.)
+- Chart 2 (right, 50%): Donut/Pie — Project Status Distribution (completed / running / pending / on-hold)
+
+SECTION C — TWO COLUMN LAYOUT:
+- Left: Line chart — Monthly grievance trends (last 12 months)
+- Right: Horizontal bar chart — Department Performance Score
+
+SECTION D — TABLE: Recent Grievances (last 10, with status badges, priority color, ward, date)
+
+SECTION E — PROJECT PROGRESS LIST:
+- Top 5 active projects with progress bars, budget used vs sanctioned, and ward
+
+SECTION F — WARD MAP SUMMARY:
+- Ward-by-ward table showing: ward name, population, grievances, projects, institutions count
+
+─────────────────────────────────────
+PAGE 4: GRIEVANCES MODULE
+─────────────────────────────────────
+LIST VIEW:
+- Header: "Grievances" + "Add New" button (Staff only)
+- Filter bar: Ward | Category | Priority | Status | Date Range | Search
+- Stats mini-bar: Total | Pending | In Progress | Resolved | Overdue (highlighted red)
+- Table view with columns: ID | Citizen Name | Category | Ward | Priority (color badge) | Status (color badge) | Created Date | Days Open | Actions
+- Row click → opens detail panel (slide-in from right)
+- Bulk actions: Mark resolved, Assign department, Export selected
+- Pagination
+
+ADD GRIEVANCE FORM (Staff):
+- Fields: Citizen Name*, Phone*, Ward (dropdown)*, Category*, Priority*, Description*, Assigned Department*, Optional: Photo upload
+- Real-time character count on description
+- Submit + Save Draft buttons
+- Success toast notification
+
+DETAIL VIEW:
+- Timeline of status changes (vertical stepper)
+- Resolution note field (Staff can add)
+- MLA can add a note/directive
+- Print button, WhatsApp notification button
+
+─────────────────────────────────────
+PAGE 5: PROJECTS MODULE
+─────────────────────────────────────
+LIST VIEW:
+- Toggle: Table view | Kanban board (4 columns: Pending | Running | On Hold | Completed)
+- Filters: Ward | Department | Status | Date Range | Budget range
+- Summary cards at top: Total Budget Sanctioned | Budget Released | Budget Used | Completion Rate
+
+TABLE COLUMNS: Project Name | Ward | Department | Start Date | End Date | Budget | Progress % | Status | Actions
+
+KANBAN: Draggable cards (Staff can move, MLA reads only) with project name, ward, progress bar, contractor, budget chip
+
+ADD PROJECT FORM (Staff):
+- Fields: Name*, Category*, Department*, Contractor, Ward*, Start Date*, End Date*, Budget Sanctioned*, Budget Released*, Budget Used*, Status*, Description
+- Progress auto-calculated based on dates + status
+- File upload for project photos/documents
+
+PROJECT DETAIL:
+- Summary header with all key metrics
+- Budget breakdown: Sanctioned vs Released vs Used (stacked bar)
+- Timeline / milestones section
+- Status history log
+- Attached files gallery
+
+─────────────────────────────────────
+PAGE 6: INSTITUTIONS MODULE
+─────────────────────────────────────
+- Tab navigation by category (All | Temples | Hospitals | Schools | Colleges | Police Stations | Govt Offices | NGOs | Gyms | Markets | Slums | RWAs | Sports Grounds | Clubs | Others)
+- Search bar + Ward filter + Status filter
+- Grid view (cards) + List view toggle
+
+INSTITUTION CARD:
+- Category icon + Name
+- Ward, Address snippet
+- Status badge (Active green / Inactive red / Maintenance yellow)
+- "View Details" button
+
+DETAIL PAGE:
+- Institution info header
+- Incharge section: photo, name, designation, contact, DOB
+- Add/Edit Incharge (Staff only)
+- Status change history
+- Notes/remarks section
+- Location (address field, optional Google Maps embed)
+
+ADD INSTITUTION FORM (Staff):
+- Name*, Category* (searchable dropdown), Address*, Ward*, Contact No*, Email, Status*, Established Year, Website, Notes
+
+─────────────────────────────────────
+PAGE 7: COMMUNITY GROUPS & DEMOGRAPHICS
+─────────────────────────────────────
+- Ward selector at top
+- Demographics card: Population breakdown (age groups) — stacked bar chart
+- Gender ratio donut chart
+- Community groups list by type with member counts
+- Table: Ward | Group Type | Male | Female | Age 0-18 | 19-35 | 36-60 | 60+
+- Add/Edit demographic data (Staff)
+
+─────────────────────────────────────
+PAGE 8: SCHEMES MODULE
+─────────────────────────────────────
+- Cards for each government scheme (name, department, target vs current beneficiaries, progress bar, budget, status, ward)
+- Filter by department, ward, status
+- Add Scheme form (Staff): name, dept, target beneficiaries, current, budget, start/end date, description
+- Scheme detail with beneficiary trend chart
+
+─────────────────────────────────────
+PAGE 9: WARDS MODULE
+─────────────────────────────────────
+- Ward cards showing: Name, Population, Area Type, # Institutions, # Projects, # Grievances
+- Click ward → ward detail page with all data filtered to that ward
+- Demographics breakdown per ward
+
+─────────────────────────────────────
+PAGE 10: REPORTS MODULE
+─────────────────────────────────────
+Report types (each with preview and download):
+1. Grievance Summary Report (by date range, ward, category)
+2. Project Progress Report
+3. Institution Directory Report
+4. Ward-wise Performance Report
+5. Demographic Summary
+6. Scheme Coverage Report
+7. Monthly Governance Report (consolidated)
+
+For each:
+- Date range picker
+- Ward/Department filter
+- Preview in browser (table + charts)
+- Download as PDF button
+- Download as Excel/CSV button
+- "Send to MLA" button (Staff)
+- Print button
+
+─────────────────────────────────────
+PAGE 11: SETTINGS PAGE
+─────────────────────────────────────
+Tabs:
+- Profile: Name, email, phone, avatar upload, change password
+- Appearance: Dark/Light toggle, font size preference, sidebar behavior
+- Notifications: Toggle for email/in-app notifications by event type
+- Constituency Info (Admin): Constituency name, MLA name, state, contact
+
+─────────────────────────────────────
+PAGE 12: SUPER ADMIN PANEL
+─────────────────────────────────────
+Sub-pages:
+- Users: List of all users, add/edit/deactivate, assign roles, reset password
+- Wards: Add/edit wards
+- Departments: Manage department list
+- Audit Logs: Table of all user actions (who, what, when, from where)
+- System: Backup trigger button, system health indicators
+
+===========================================================
+GLOBAL UI COMPONENTS (build these as reusable)
+===========================================================
+- <StatCard /> — KPI card with icon, value, trend, subtitle
+- <StatusBadge /> — color-coded pill for status values
+- <PriorityBadge /> — red/yellow/green for High/Medium/Low
+- <DataTable /> — sortable, filterable, paginated table
+- <Modal /> — centered overlay with backdrop blur
+- <SlidePanel /> — right-side drawer for detail views
+- <ConfirmDialog /> — for delete/approve/reject actions
+- <Toast /> — top-right notifications (success/error/warning/info)
+- <LoadingSpinner /> and <SkeletonLoader /> — for async states
+- <EmptyState /> — illustrated empty state with action button
+- <Breadcrumb /> — page path navigation
+- <DateRangePicker /> — for report filters
+- <FileUpload /> — drag & drop with preview
+- <SearchBar /> — with keyboard shortcut hint (Ctrl+K)
+- <ThemeToggle /> — sun/moon with smooth transition animation
+- <RoleGuard /> — HOC that hides elements by role
+
+===========================================================
+DARK / LIGHT MODE SPECIFICATIONS
+===========================================================
+Dark Mode palette:
+- Background: #0F172A (deep navy)
+- Surface/Cards: #1E293B
+- Border: #334155
+- Text Primary: #F1F5F9
+- Text Secondary: #94A3B8
+- Accent Blue: #3B82F6
+- Accent Green: #10B981
+- Warning: #F59E0B
+- Danger: #EF4444
+
+Light Mode palette:
+- Background: #F8FAFC
+- Surface/Cards: #FFFFFF
+- Border: #E2E8F0
+- Text Primary: #0F172A
+- Text Secondary: #64748B
+- Accent Blue: #2563EB
+- Accent Green: #059669
+- Warning: #D97706
+- Danger: #DC2626
+
+Transition: all color properties transition with `transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;`
+
+Store theme preference in localStorage and apply class to <html> element.
+
+===========================================================
+ANIMATIONS & INTERACTIONS
+===========================================================
+- Page transitions: fade + slide-up (150ms) on route change
+- Sidebar collapse: smooth width transition (250ms)
+- KPI cards: count-up animation on mount (1.5s)
+- Charts: animate on first render
+- Modals: scale-in from center
+- Slide panels: translate from right
+- Hover on cards: subtle lift (transform: translateY(-2px) + box-shadow)
+- Buttons: scale(0.97) on active
+- Notification bell: wiggle animation on new notification
+- Loading states: skeleton pulse animation
+
+===========================================================
+SAMPLE MOCK DATA (generate realistic Indian context)
+===========================================================
+- 8-12 wards with Hindi/regional names
+- 30+ institutions across all categories
+- 50+ grievances in various states
+- 10+ projects (mix of completed/running/pending)
+- Community demographics for each ward
+- 5 schemes (Ayushman Bharat, PM Awas, Beti Bachao, etc.)
+- 3 users: 1 Super Admin, 1 MLA, 2 Staff
+
+All names, ward names, and institutions should reflect Indian constituency context (Hindi-English mixed where appropriate).
+
+===========================================================
+PROCESS FLOW TO IMPLEMENT
+===========================================================
+
+Grievance Flow:
+Citizen visits office → Staff logs grievance in system → System assigns ID + timestamp → MLA sees on dashboard → MLA can add note/priority → Staff assigned department → Department updates status → System tracks resolution time → Auto-flag if overdue (>7 days) → Resolved grievance shows on analytics
+
+Project Flow:
+Staff creates project record → Ward + department assigned → MLA sees on dashboard → Staff updates progress periodically → Budget usage updated → System calculates % complete → Completed → shows in analytics
+
+Infrastructure Flow:
+Staff visits field → Collects institution data → Enters in system with ward + category + incharge → Dashboard updates count → MLA views directory → Filters by ward/category
+
+===========================================================
+REPORT GENERATION SPECIFICATIONS
+===========================================================
+- Use jsPDF + html2canvas for PDF export
+- Use SheetJS (xlsx library) for Excel export
+- Reports must include: header with constituency name + MLA name + date generated + page numbers
+- Charts in PDF reports (capture as image)
+- All reports printable with print-optimized CSS
+- Report preview modal shows formatted preview before download
+
+===========================================================
+NOTIFICATIONS SYSTEM
+===========================================================
+- In-app notification center (bell icon dropdown)
+- Notification types:
+  - New grievance added (Staff → MLA)
+  - Grievance overdue (auto, after 7 days)
+  - Project milestone reached
+  - Report generated
+  - New user added (Super Admin)
+- Mark as read, mark all read, clear all
+- Real-time via polling (every 60s) or WebSocket
+
+===========================================================
+ACCESSIBILITY & PERFORMANCE
+===========================================================
+- ARIA labels on all interactive elements
+- Keyboard navigable (Tab + Enter)
+- Color contrast ratio WCAG AA compliant
+- Lazy load heavy chart components
+- Memoize expensive calculations
+- Debounce search inputs
+- Virtualize long lists (react-window if needed)
+- Mobile responsive breakpoints (sm/md/lg)
+
+===========================================================
+FUTURE-READY ARCHITECTURE NOTES
+===========================================================
+- Structure code to easily scale to multi-constituency (add constituency_id to all tables)
+- API abstracted in a `/services/api.js` layer
+- Environment variables for all config
+- Modular component structure (each module = feature folder)
+- Constants file for all status values, categories, role names
+- Centralized error handling
+- Ready for SMS/WhatsApp API integration (Twilio / MSG91 placeholder)
+
+===========================================================
+DELIVERABLE CHECKLIST
+===========================================================
+[ ] Login page (role-based redirect)
+[ ] Persistent dark/light mode toggle
+[ ] Collapsible sidebar with role-based nav items
+[ ] Overview dashboard with 6 KPI cards + 4 charts
+[ ] Grievances module (list, add, detail, filters)
+[ ] Projects module (list + kanban, add, detail)
+[ ] Institutions module (tabbed, add, incharge mgmt)
+[ ] Community & Demographics module
+[ ] Schemes tracker
+[ ] Wards overview
+[ ] Reports module (PDF + Excel export)
+[ ] Settings page (profile + appearance)
+[ ] Super Admin panel (users, audit logs)
+[ ] Toast notifications
+[ ] Loading/skeleton states
+[ ] Empty states
+[ ] Mobile responsive layout
+[ ] Realistic Indian-context mock data
+[ ] JWT auth flow (or mock auth with role-based routing)
+[ ] Role guard components (hide/show by role)
+```
+
+---
+
+## HOW TO USE THIS PROMPT
+
+Split into these **build phases** if building incrementally:
+
+| Phase | Scope |
+|-------|-------|
+| **Phase 1** | Login page + layout shell + dark/light mode + sidebar |
+| **Phase 2** | Overview dashboard (KPIs + charts) with mock data |
+| **Phase 3** | Grievances module (full CRUD + filters + detail) |
+| **Phase 4** | Projects module (table + kanban + detail) |
+| **Phase 5** | Institutions module (tabbed directory + incharge) |
+| **Phase 6** | Community + Demographics + Schemes + Wards |
+| **Phase 7** | Reports module (PDF + Excel export) |
+| **Phase 8** | Admin panel (users, audit logs, settings) |
+| **Phase 9** | Notifications system + real-time updates |
+| **Phase 10** | Polish: animations, mobile responsive, accessibility |
+
+---
+
+## KEY DESIGN DECISIONS SUMMARY
+
+- **Single constituency** platform — not multi-tenant
+- **3 roles**: Super Admin (full control) → MLA (view + approve) → Staff (data entry)
+- **Indian governance context**: professional, trustworthy aesthetic
+- **Data flows upward**: Staff enters → System processes → MLA monitors
+- **All modules are ward-centric**: every record is tied to a ward
+- **Reports are core**: PDF + Excel for every module
+- **Dark mode first**, light mode as alternative
+- **Mobile responsive** for MLA who may use on mobile
+
+---
+
+*Generated from: MP_MLA_dashboard_project.docx + Process_flow_for_project.docx + Data_to_be_collected.docx + MLA_CMS_project.pdf — Vibrantick Infotech Solutions*
