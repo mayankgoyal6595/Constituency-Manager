@@ -13,6 +13,7 @@ import Community from "@/pages/Community";
 import Schemes from "@/pages/Schemes";
 import Wards from "@/pages/Wards";
 import Login from "@/pages/Login";
+import Reports from "@/pages/Reports";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/community" component={Community} />
       <Route path="/schemes" component={Schemes} />
       <Route path="/wards" component={Wards} />
+      <Route path="/reports" component={Reports} />
       <Route component={NotFound} />
     </Switch>
   );
