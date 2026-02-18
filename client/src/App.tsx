@@ -14,6 +14,8 @@ import Schemes from "@/pages/Schemes";
 import Wards from "@/pages/Wards";
 import Login from "@/pages/Login";
 import Reports from "@/pages/Reports";
+import UserManagement from "@/pages/admin/Users";
+import Permissions from "@/pages/admin/Permissions";
 
 function Router() {
   return (
@@ -28,6 +30,8 @@ function Router() {
       <Route path="/schemes" component={Schemes} />
       <Route path="/wards" component={Wards} />
       <Route path="/reports" component={Reports} />
+      <Route path="/admin/users" component={UserManagement} />
+      <Route path="/admin/permissions" component={Permissions} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -40,9 +40,13 @@ export function Sidebar({ collapsed, setCollapsed, user }: SidebarProps) {
     { label: "Reports", icon: BarChart3, href: "/reports" },
   ];
 
+  const adminItems = [
+    { label: "User Management", icon: Users, href: "/admin/users" },
+    { label: "Permissions", icon: Shield, href: "/admin/permissions" },
+  ];
+
   const bottomItems = [
     { label: "Settings", icon: Settings, href: "/settings" },
-    { label: "Admin Panel", icon: Shield, href: "/admin", adminOnly: true },
   ];
 
   return (
@@ -94,6 +98,40 @@ export function Sidebar({ collapsed, setCollapsed, user }: SidebarProps) {
                 )}
               >
                 <item.icon className={cn("h-5 w-5 min-w-5", isActive ? "text-white" : "group-hover:text-primary")} />
+                {!collapsed && (
+                  <span className="truncate">{item.label}</span>
+                )}
+                {collapsed && (
+                   <div className="absolute left-14 bg-popover text-popover-foreground px-2 py-1 rounded text-xs shadow-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-border">
+                     {item.label}
+                   </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+
+        <div className="mt-6 mb-2 px-3">
+          {!collapsed ? (
+            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Administration</p>
+          ) : (
+            <div className="border-t border-sidebar-border/50 mx-2" />
+          )}
+        </div>
+
+        {adminItems.map((item) => {
+          const isActive = location === item.href;
+          return (
+            <Link key={item.href} href={item.href}>
+              <div
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 group relative",
+                  isActive
+                    ? "bg-primary/20 text-primary font-medium"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+              >
+                <item.icon className={cn("h-5 w-5 min-w-5", isActive ? "text-primary" : "group-hover:text-primary")} />
                 {!collapsed && (
                   <span className="truncate">{item.label}</span>
                 )}
